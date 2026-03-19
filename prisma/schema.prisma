@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String?  @map("full_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  incomes           Income[]
+  expenses          Expense[]
+  expenseCategories ExpenseCategory[]
+  piggyBanks        PiggyBank[]
+  piggyTransactions PiggyTransaction[]
+
+  @@map("users")
+}
+
+model Income {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String
+  amount      Decimal  @db.Decimal(12, 2)
+  recurrence  String   @default("none")
+  receiveDate Int      @default(1) @map("receive_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("incomes")
+}
+
+model ExpenseCategory {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  name      String
+  color     String   @default("#FF6B35")
+  icon      String   @default("tag")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@index([userId])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  categoryId  Int?     @map("category_id")
+  amount      Decimal  @db.Decimal(12, 2)
+  description String
+  date        DateTime @default(now()) @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category ExpenseCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([date])
+  @@map("expenses")
+}
+
+model PiggyBank {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  name      String
+  goal      String?  @db.Text
+  bank      String   @default("Outro")
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PiggyTransaction[]
+
+  @@index([userId])
+  @@map("piggy_banks")
+}
+
+model PiggyTransaction {
+  id          Int      @id @default(autoincrement())
+  piggyBankId Int      @map("piggy_bank_id")
+  userId      Int      @map("user_id")
+  type        String
+  amount      Decimal  @db.Decimal(12, 2)
+  description String?  @db.Text
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  piggyBank PiggyBank @relation(fields: [piggyBankId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([piggyBankId])
+  @@index([userId])
+  @@index([date])
+  @@map("piggy_transactions")
+}
