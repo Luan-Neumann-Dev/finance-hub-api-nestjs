@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -14,7 +15,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: any, host: ArgumentsHost) {
     const context = host.switchToHttp();
-    const response = context.getResponse<Response>;
+    const response = context.getResponse<Response>();
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
