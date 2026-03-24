@@ -4,6 +4,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { IncomesModule } from './modules/incomes/incomes.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { IncomesModule } from './modules/incomes/incomes.module';
     AuthModule,
     CategoriesModule,
     IncomesModule,
+    ExpensesModule,
   ],
   controllers: [],
   providers: [],
