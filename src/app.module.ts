@@ -7,6 +7,7 @@ import { IncomesModule } from './modules/incomes/incomes.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { PiggyBanksModule } from './modules/piggy-banks/piggy-banks.module';
 import { PiggyTransactionsModule } from './modules/piggy-transactions/piggy-transactions.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PiggyTransactionsModule } from './modules/piggy-transactions/piggy-tran
     ExpensesModule,
     PiggyBanksModule,
     PiggyTransactionsModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],
