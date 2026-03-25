@@ -6,6 +6,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { IncomesModule } from './modules/incomes/incomes.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { PiggyBanksModule } from './modules/piggy-banks/piggy-banks.module';
+import { PiggyTransactionsModule } from './modules/piggy-transactions/piggy-transactions.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PiggyBanksModule } from './modules/piggy-banks/piggy-banks.module';
     IncomesModule,
     ExpensesModule,
     PiggyBanksModule,
+    PiggyTransactionsModule,
   ],
   controllers: [],
   providers: [],
