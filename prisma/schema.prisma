@@ -19,8 +19,27 @@ model User {
   expenseCategories ExpenseCategory[]
   piggyBanks        PiggyBank[]
   piggyTransactions PiggyTransaction[]
+  installmentGroups InstallmentGroup[]
 
   @@map("users")
+}
+
+model InstallmentGroup {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  categoryId   Int?     @map("category_id")
+  description  String
+  totalAmount  Decimal  @map("total_amount") @db.Decimal(12, 2)
+  installments Int
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category ExpenseCategory? @relation(fields: [categoryId], references: [id])
+  expenses Expense[]
+
+  @@index([userId])
+  @@map("installment_group")
 }
 
 model Income {
@@ -47,25 +66,29 @@ model ExpenseCategory {
   icon      String   @default("tag")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expenses Expense[]
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses         Expense[]
+  installmentGroup InstallmentGroup[]
 
   @@index([userId])
   @@map("expense_categories")
 }
 
 model Expense {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  categoryId  Int?     @map("category_id")
-  amount      Decimal  @db.Decimal(12, 2)
-  description String
-  date        DateTime @default(now()) @db.Date
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @map("user_id")
+  categoryId         Int?     @map("category_id")
+  installmentGroupId Int?     @map("installment_group_id")
+  installmentNumber  Int?     @map("installment_number")
+  amount             Decimal  @db.Decimal(12, 2)
+  description        String
+  date               DateTime @default(now()) @db.Date
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category ExpenseCategory? @relation(fields: [categoryId], references: [id])
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         ExpenseCategory?  @relation(fields: [categoryId], references: [id])
+  installmentGroup InstallmentGroup? @relation(fields: [installmentGroupId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([categoryId])
