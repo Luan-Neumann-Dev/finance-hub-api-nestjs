@@ -8,6 +8,7 @@ import { ExpensesModule } from './modules/expenses/expenses.module';
 import { PiggyBanksModule } from './modules/piggy-banks/piggy-banks.module';
 import { PiggyTransactionsModule } from './modules/piggy-transactions/piggy-transactions.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { InstallmentsModule } from './modules/installments/installments.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ReportsModule } from './modules/reports/reports.module';
     PiggyBanksModule,
     PiggyTransactionsModule,
     ReportsModule,
+    InstallmentsModule,
   ],
   controllers: [],
   providers: [],
