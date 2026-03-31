@@ -22,7 +22,11 @@ export class ReportsService {
         _sum: { amount: true },
       }),
       this.prisma.income.findMany({
-        where: { userId, recurrence: { not: 'none' } },
+        where: {
+          userId,
+          recurrence: { not: 'none' },
+          createdAt: { lte: startOfMonth },
+        },
         select: { amount: true, recurrence: true },
       }),
     ]);
@@ -135,7 +139,11 @@ export class ReportsService {
           _sum: { amount: true },
         }),
         this.prisma.income.findMany({
-          where: { userId, recurrence: { not: 'none' } },
+          where: {
+            userId,
+            recurrence: { not: 'none' },
+            createdAt: { lte: startDate },
+          },
           select: { amount: true, recurrence: true },
         }),
         this.prisma.expense.aggregate({
@@ -244,7 +252,7 @@ export class ReportsService {
       }),
       this.prisma.income.findMany({
         where: { userId, recurrence: { not: 'none' } },
-        select: { amount: true, recurrence: true },
+        select: { amount: true, recurrence: true, createdAt: true },
       }),
     ]);
 
@@ -260,22 +268,26 @@ export class ReportsService {
       oneTimeByMonth[month] += Number(income.amount);
     }
 
-    const recurringMonthlyValue = recurringIncomes.reduce((sum, income) => {
-      const amount = Number(income.amount);
-      switch (income.recurrence) {
-        case 'weekly':
-          return sum + amount * 4;
-        case 'monthly':
-          return sum + amount;
-        case 'annual':
-          return sum + amount / 12;
-        default:
-          return sum;
-      }
-    }, 0);
-
     const monthlyData = Array.from({ length: 12 }, (_, index) => {
-      const incomes = oneTimeByMonth[index] + recurringMonthlyValue;
+      const monthStart = new Date(year, index, 1);
+
+      const recurringForThisMonth = recurringIncomes
+        .filter((income) => new Date(income.createdAt) <= monthStart)
+        .reduce((sum, income) => {
+          const amount = Number(income.amount);
+          switch (income.recurrence) {
+            case 'weekly':
+              return sum + amount * 4;
+            case 'monthly':
+              return sum + amount;
+            case 'annual':
+              return sum + amount / 12;
+            default:
+              return sum;
+          }
+        }, 0);
+
+      const incomes = oneTimeByMonth[index] + recurringForThisMonth;
       const expenses = expensesByMonth[index];
       return {
         month: index + 1,
