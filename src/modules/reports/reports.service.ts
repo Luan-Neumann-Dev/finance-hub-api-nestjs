@@ -25,7 +25,7 @@ export class ReportsService {
         where: {
           userId,
           recurrence: { not: 'none' },
-          createdAt: { lte: startOfMonth },
+          createdAt: { lte: endOfMonth },
         },
         select: { amount: true, recurrence: true },
       }),
@@ -142,7 +142,7 @@ export class ReportsService {
           where: {
             userId,
             recurrence: { not: 'none' },
-            createdAt: { lte: startDate },
+            createdAt: { lte: endDate },
           },
           select: { amount: true, recurrence: true },
         }),
@@ -269,10 +269,10 @@ export class ReportsService {
     }
 
     const monthlyData = Array.from({ length: 12 }, (_, index) => {
-      const monthStart = new Date(year, index, 1);
+      const monthEnd = new Date(year, index + 1, 0, 23, 59, 59)
 
       const recurringForThisMonth = recurringIncomes
-        .filter((income) => new Date(income.createdAt) <= monthStart)
+        .filter((income) => new Date(income.createdAt) <= monthEnd)
         .reduce((sum, income) => {
           const amount = Number(income.amount);
           switch (income.recurrence) {
