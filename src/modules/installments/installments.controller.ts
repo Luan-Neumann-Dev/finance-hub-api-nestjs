@@ -1,34 +1,53 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { InstallmentsService } from './installments.service';
 import { CreateInstallmentDto } from './dto/create-installment.dto';
-import { UpdateInstallmentDto } from './dto/update-installment.dto';
+import {
+  DeleteInstallmentDto,
+  UpdateInstallmentDto,
+} from './dto/update-installment.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('installments')
 export class InstallmentsController {
   constructor(private readonly installmentsService: InstallmentsService) {}
 
-  @Post()
-  create(@Body() createInstallmentDto: CreateInstallmentDto) {
-    return this.installmentsService.create(createInstallmentDto);
-  }
-
   @Get()
-  findAll() {
-    return this.installmentsService.findAll();
+  findAll(@CurrentUser() userId: number) {
+    return this.installmentsService.findAll(userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.installmentsService.findOne(+id);
+  @Post()
+  create(@Body() dto: CreateInstallmentDto, @CurrentUser() userId: number) {
+    return this.installmentsService.create(dto, userId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInstallmentDto: UpdateInstallmentDto) {
-    return this.installmentsService.update(+id, updateInstallmentDto);
+  @Put('expense/:expenseId')
+  updateInstallment(
+    @Param('expenseId', ParseIntPipe) expenseId: number,
+    @Body() dto: UpdateInstallmentDto,
+    @CurrentUser() userId: number,
+  ) {
+    return this.installmentsService.updateInstallment(expenseId, dto, userId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.installmentsService.remove(+id);
+  @Delete('expense/:expenseId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteInstallment(
+    @Param('expenseId', ParseIntPipe) expenseId: number,
+    @Body() dto: DeleteInstallmentDto,
+    @CurrentUser() userId: number,
+  ) {
+    return this.installmentsService.deleteInstallment(expenseId, dto, userId);
   }
 }
