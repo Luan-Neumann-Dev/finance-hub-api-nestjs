@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async calcIncomesForMonth(
     userId: number,
@@ -62,32 +62,41 @@ export class ReportsService {
       59,
     );
 
-    const [totalIncomes, expensesAgg, savingsAggs, expensesByCategory, pendingAgg] =
-      await Promise.all([
-        this.calcIncomesForMonth(userId, startOfMonth, endOfMonth),
-        this.prisma.expense.aggregate({
-          where: { userId, date: { gte: startOfMonth, lte: endOfMonth } },
-          _sum: { amount: true },
-        }),
-        this.prisma.piggyBank.aggregate({
-          where: { userId },
-          _sum: { balance: true },
-        }),
-        this.prisma.expense.groupBy({
-          by: ['categoryId'],
-          where: {
-            userId,
-            date: { gte: startOfMonth, lte: endOfMonth },
-            categoryId: { not: null },
-          },
-          _sum: { amount: true },
-          _count: true,
-        }),
-        this.prisma.expense.aggregate({
-          where: { userId, date: { gte: startOfMonth, lte: endOfMonth }, paidAt: null },
-          _sum: { amount: true },
-        })
-      ]);
+    const [
+      totalIncomes,
+      expensesAgg,
+      savingsAggs,
+      expensesByCategory,
+      pendingAgg,
+    ] = await Promise.all([
+      this.calcIncomesForMonth(userId, startOfMonth, endOfMonth),
+      this.prisma.expense.aggregate({
+        where: { userId, date: { gte: startOfMonth, lte: endOfMonth } },
+        _sum: { amount: true },
+      }),
+      this.prisma.piggyBank.aggregate({
+        where: { userId },
+        _sum: { balance: true },
+      }),
+      this.prisma.expense.groupBy({
+        by: ['categoryId'],
+        where: {
+          userId,
+          date: { gte: startOfMonth, lte: endOfMonth },
+          categoryId: { not: null },
+        },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.expense.aggregate({
+        where: {
+          userId,
+          date: { gte: startOfMonth, lte: endOfMonth },
+          paidAt: null,
+        },
+        _sum: { amount: true },
+      }),
+    ]);
 
     const totalExpenses = Number(expensesAgg._sum.amount ?? 0);
     const totalSavings = Number(savingsAggs._sum.balance ?? 0);
@@ -118,7 +127,7 @@ export class ReportsService {
       .sort((a, b) => b.total - a.total);
 
     const totalPending = Number(pendingAgg._sum.amount ?? 0);
-    const totalPaid    = totalExpenses - totalPending;
+    const totalPaid = totalExpenses - totalPending;
 
     return {
       totalIncomes,
@@ -278,7 +287,7 @@ export class ReportsService {
     }
 
     const monthlyData = Array.from({ length: 12 }, (_, index) => {
-      const monthEnd = new Date(year, index + 1, 0, 23, 59, 59)
+      const monthEnd = new Date(year, index + 1, 0, 23, 59, 59);
 
       const recurringForThisMonth = recurringIncomes
         .filter((income) => new Date(income.createdAt) <= monthEnd)
