@@ -106,7 +106,10 @@ export class ExpensesService {
 
     const expense = await this.prisma.expense.update({
       where: { id },
-      data: dto,
+      data: {
+        ...dto,
+        ...(dto.date ? { date: new Date(dto.date) } : {}),
+      },
       include: { category: true },
     });
 
