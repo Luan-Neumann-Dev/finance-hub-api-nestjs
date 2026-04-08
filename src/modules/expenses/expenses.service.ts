@@ -20,18 +20,42 @@ export class ExpensesService {
     const limit = pagination.limit ?? 10;
     const skip = (page - 1) * limit;
 
-    const [expenses, total] = await Promise.all([
+    const now = new Date();
+    const month = pagination.month ?? now.getMonth() + 1;
+    const year = pagination.year ?? now.getFullYear();
+
+    const startDate = new Date(year, month - 1, 1, 0, 0, 0);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const where = {
+      userId,
+      date: { gte: startDate, lte: endDate },
+    };
+
+    const [expenses, total, allMonthExpenses] = await Promise.all([
       this.prisma.expense.findMany({
-        where: { userId },
+        where,
         include: { category: true },
         orderBy: { date: 'asc' },
         skip,
         take: limit,
       }),
-      this.prisma.expense.count({ where: { userId } }),
+      this.prisma.expense.count({ where }),
+      this.prisma.expense.findMany({
+        where,
+        select: { amount: true, paidAt: true },
+      }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
+
+    const totalPaid = allMonthExpenses
+      .filter((e) => e.paidAt !== null)
+      .reduce((s, e) => s + Number(e.amount), 0);
+
+    const totalPending = allMonthExpenses
+      .filter((e) => e.paidAt === null)
+      .reduce((s, e) => s + Number(e.amount), 0);
 
     return {
       data: expenses.map((e) => ({ ...e, amount: Number(e.amount) })),
@@ -42,6 +66,8 @@ export class ExpensesService {
         totalPages,
         hasPreviousPage: page > 1,
         hasNextPage: page < totalPages,
+        totalPaid,
+        totalPending,
       },
     };
   }

@@ -14,6 +14,19 @@ export class PaginationDto {
   @Min(1)
   @Max(100)
   limit?: number = 10;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  year?: number;
 }
 
 export interface PaginatedResult<T> {
@@ -25,5 +38,7 @@ export interface PaginatedResult<T> {
     totalPages: number;
     hasPreviousPage: boolean;
     hasNextPage: boolean;
+    totalPaid?: number;
+    totalPending?: number;
   };
 }
