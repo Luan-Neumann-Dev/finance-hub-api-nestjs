@@ -8,6 +8,9 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-latest-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![License](https://img.shields.io/badge/license-UNLICENSED-gray.svg?style=for-the-badge)](LICENSE)
 
+<img width="1897" height="836" alt="image" src="https://github.com/user-attachments/assets/88096dfd-d33c-43e5-aeb4-f01cbb32629d" />
+
+
 **🔗 Related repository: [FinanceHub Web (frontend)](https://github.com/Luan-Neumann-Dev/finance-hub-web)**
 
 ---
