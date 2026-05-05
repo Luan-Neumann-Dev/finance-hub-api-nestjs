@@ -9,19 +9,21 @@ import {
   Put,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { PiggyBanksService } from './piggy-banks.service';
 import { CreatePiggyBankDto } from './dto/create-piggy-bank.dto';
 import { UpdatePiggyBankDto } from './dto/update-piggy-bank.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('piggy-banks')
 export class PiggyBanksController {
   constructor(private readonly piggyBanksService: PiggyBanksService) {}
 
   @Get()
-  findAll(@CurrentUser() userId: number) {
-    return this.piggyBanksService.findAll(userId);
+  findAll(@CurrentUser() userId: number, @Query() pagination: PaginationDto) {
+    return this.piggyBanksService.findAll(userId, pagination);
   }
 
   @Get('total-savings')

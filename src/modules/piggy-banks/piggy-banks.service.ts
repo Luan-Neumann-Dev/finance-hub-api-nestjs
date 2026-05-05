@@ -11,19 +11,46 @@ import {
 import { CreatePiggyBankDto } from './dto/create-piggy-bank.dto';
 import { UpdatePiggyBankDto } from './dto/update-piggy-bank.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PaginatedResult, PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class PiggyBanksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId: number) {
-    const piggyBanks = await this.prisma.piggyBank.findMany({
-      where: { userId },
-      include: { transactions: { orderBy: { date: 'desc' } } },
-      orderBy: { name: 'asc' },
-    });
+  async findAll(
+    userId: number,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResult<any>> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const skip = (page - 1) * limit;
 
-    return piggyBanks.map((pb) => this.format(pb));
+    const where = { userId };
+
+    const [piggyBanks, total] = await Promise.all([
+      this.prisma.piggyBank.findMany({
+        where: { userId },
+        include: { transactions: { orderBy: { date: 'desc' } } },
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.piggyBank.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: piggyBanks.map((pb) => this.format(pb)),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
   }
 
   async findById(id: number, userId: number) {

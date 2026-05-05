@@ -25,10 +25,7 @@ export class InstallmentsController {
   constructor(private readonly installmentsService: InstallmentsService) {}
 
   @Get()
-  findAll(
-    @CurrentUser() userId: number,
-    @Query() pagination: PaginationDto
-  ) {
+  findAll(@CurrentUser() userId: number, @Query() pagination: PaginationDto) {
     return this.installmentsService.findAll(userId, pagination);
   }
 
