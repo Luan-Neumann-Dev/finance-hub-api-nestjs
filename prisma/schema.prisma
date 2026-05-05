@@ -104,6 +104,7 @@ model PiggyBank {
   userId    Int      @map("user_id")
   name      String
   goal      String?  @db.Text
+  goalAmount  Decimal? @map("goal_amount") @db.Decimal(12, 2)
   bank      String   @default("Outro")
   balance   Decimal  @default(0) @db.Decimal(12, 2)
   createdAt DateTime @default(now()) @map("created_at")

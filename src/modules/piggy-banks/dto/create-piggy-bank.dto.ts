@@ -15,6 +15,11 @@ export class CreatePiggyBankDto {
   goal?: string;
 
   @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Valor meta inválido' })
+  @IsPositive({ message: 'Valor meta deve ser positivo' })
+  goalAmount?: number;
+
+  @IsOptional()
   @IsString()
   @MaxLength(100, { message: 'Nome do banco muito longo' })
   @Transform(({ value }) => value?.trim())

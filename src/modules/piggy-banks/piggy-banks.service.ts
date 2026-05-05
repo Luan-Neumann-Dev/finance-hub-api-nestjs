@@ -49,7 +49,9 @@ export class PiggyBanksService {
     const piggyBank = await this.prisma.piggyBank.create({
       data: {
         userId,
-        ...dto,
+        name: dto.name,
+        goal: dto.goal,
+        goalAmount: dto.goalAmount ?? null,
         bank: dto.bank ?? 'Outro',
         balance: 0,
       },
@@ -64,7 +66,12 @@ export class PiggyBanksService {
 
     const piggyBank = await this.prisma.piggyBank.update({
       where: { id },
-      data: dto,
+      data: {
+        ...( dto.name !== undefined && { name: dto.name }),
+        ...( dto.goal !== undefined && { goal: dto.goal }),
+        ...(dto.bank !== undefined && { bank: dto.bank }),
+        ...(dto.goalAmount !== undefined && {goalAmount: dto.goalAmount ?? null}),
+      },
       include: { transactions: true },
     });
 
@@ -93,9 +100,29 @@ export class PiggyBanksService {
   }
 
   private format(piggyBank: any) {
+    const balance = Number(piggyBank.balance);
+    const goalAmount =
+      piggyBank.goalAmount !== null && piggyBank.goalAmount !== undefined
+        ? Number(piggyBank.goalAmount)
+        : null;
+
+    const progress =
+      goalAmount !== null && goalAmount > 0
+        ? Math.min(Math.round((balance / goalAmount) * 10000) / 100, 100)
+        : null;
+
+    const remainingAmount =
+      goalAmount !== null ? Math.max(goalAmount - balance, 0) : null;
+
+    const isGoalReached = goalAmount !== null ? balance >= goalAmount : null;
+    
     return {
       ...piggyBank,
-      balance: Number(piggyBank.balance),
+      balance,
+      goalAmount,
+      progress,
+      remainingAmount,
+      isGoalReached,
       transactions: piggyBank.transactions.map((t: any) => ({
         ...t,
         amount: Number(t.amount),
