@@ -17,22 +17,49 @@ import {
   UpdateInstallmentDto,
   UpdateScope,
 } from './dto/update-installment.dto';
+import { PaginatedResult, PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class InstallmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId: number) {
-    const groups = await this.prisma.installmentGroup.findMany({
-      where: { userId },
-      include: {
-        category: true,
-        expenses: { orderBy: { installmentNumber: 'asc' } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(
+    userId: number,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResult<any>> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const skip = (page - 1) * limit;
 
-    return groups.map((g) => this.serializeGroup(g));
+    const where = { userId };
+
+    const [groups, total] = await Promise.all([
+      this.prisma.installmentGroup.findMany({
+        where: { userId },
+        include: {
+          category: true,
+          expenses: { orderBy: { installmentNumber: 'asc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.installmentGroup.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: groups.maps((g) => this.serializeGroup(g)),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
   }
 
   async create(dto: CreateInstallmentDto, userId: number) {

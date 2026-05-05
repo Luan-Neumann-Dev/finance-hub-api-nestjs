@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { InstallmentsService } from './installments.service';
 import { CreateInstallmentDto } from './dto/create-installment.dto';
@@ -17,14 +18,18 @@ import {
   UpdateInstallmentDto,
 } from './dto/update-installment.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('installments')
 export class InstallmentsController {
   constructor(private readonly installmentsService: InstallmentsService) {}
 
   @Get()
-  findAll(@CurrentUser() userId: number) {
-    return this.installmentsService.findAll(userId);
+  findAll(
+    @CurrentUser() userId: number,
+    @Query() pagination: PaginationDto
+  ) {
+    return this.installmentsService.findAll(userId, pagination);
   }
 
   @Post()
