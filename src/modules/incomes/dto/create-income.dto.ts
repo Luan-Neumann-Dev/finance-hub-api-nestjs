@@ -37,6 +37,6 @@ export class CreateIncomeDto {
   @IsOptional()
   @IsNumber()
   @Min(1, { message: 'Dia deve ser entre 1 e 31' })
-  @Max(1, { message: 'Dia deve ser entre 1 e 31' })
+  @Max(31, { message: 'Dia deve ser entre 1 e 31' })
   receiveDate?: number;
 }
