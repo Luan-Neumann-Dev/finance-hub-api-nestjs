@@ -16,15 +16,15 @@ import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { PeriodQueryDto, UpdateExpenseDto } from './dto/update-expense.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ExpenseFilterDto } from './dto/expense-filter.dto';
 
 @Controller('expenses')
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
   @Get()
-  findAll(@CurrentUser() userId: number, @Query() pagination: PaginationDto) {
-    return this.expensesService.findAll(userId, pagination);
+  findAll(@CurrentUser() userId: number, @Query() filters: ExpenseFilterDto) {
+    return this.expensesService.findAll(userId, filters);
   }
 
   @Get('period')

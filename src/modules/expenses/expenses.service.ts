@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   ForbiddenException,
   Injectable,
@@ -6,7 +10,8 @@ import {
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PaginatedResult, PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginatedResult } from 'src/common/dto/pagination.dto';
+import { ExpenseFilterDto, PaymentStatus } from './dto/expense-filter.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -14,20 +19,42 @@ export class ExpensesService {
 
   async findAll(
     userId: number,
-    pagination: PaginationDto,
+    filters: ExpenseFilterDto,
   ): Promise<PaginatedResult<any>> {
-    const page = pagination.page ?? 1;
-    const limit = pagination.limit ?? 10;
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 10;
     const skip = (page - 1) * limit;
 
     const now = new Date();
-    const month = pagination.month ?? now.getMonth() + 1;
-    const year = pagination.year ?? now.getFullYear();
+    const month = filters.month ?? now.getMonth() + 1;
+    const year = filters.year ?? now.getFullYear();
 
     const startDate = new Date(year, month - 1, 1, 0, 0, 0);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
-    const where = {
+    const where: any = {
+      userId,
+      date: { gte: startDate, lte: endDate },
+    };
+
+    if (filters.categoryId !== undefined) {
+      where.categoryId = filters.categoryId;
+    }
+
+    if (filters.status === PaymentStatus.PAID) {
+      where.paidAt = { not: null };
+    } else if (filters.status === PaymentStatus.PENDING) {
+      where.paidAt = null;
+    }
+
+    if (filters.search) {
+      where.description = {
+        contains: filters.search,
+        mode: 'insensitive',
+      };
+    }
+
+    const allMonthWhere = {
       userId,
       date: { gte: startDate, lte: endDate },
     };
@@ -42,7 +69,7 @@ export class ExpensesService {
       }),
       this.prisma.expense.count({ where }),
       this.prisma.expense.findMany({
-        where,
+        where: allMonthWhere,
         select: { amount: true, paidAt: true },
       }),
     ]);
