@@ -9,19 +9,21 @@ import {
   Put,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { IncomesService } from './incomes.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('incomes')
 export class IncomesController {
   constructor(private readonly incomesService: IncomesService) {}
 
   @Get()
-  findAll(@CurrentUser() userId: number) {
-    return this.incomesService.findAll(userId);
+  findAll(@CurrentUser() userId: number, @Query() pagination: PaginationDto) {
+    return this.incomesService.findAll(userId, pagination);
   }
 
   @Get(':id')

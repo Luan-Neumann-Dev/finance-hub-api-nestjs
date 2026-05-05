@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   ForbiddenException,
   Injectable,
@@ -6,21 +10,48 @@ import {
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PaginatedResult, PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class IncomesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId: number) {
-    const incomes = await this.prisma.income.findMany({
-      where: { userId },
-      orderBy: { name: 'asc' },
-    });
+  async findAll(
+    userId: number,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResult<any>> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const skip = (page - 1) * limit;
 
-    return incomes.map((income) => ({
-      ...income,
-      amount: Number(income.amount),
-    }));
+    const where = { userId };
+
+    const [incomes, total] = await Promise.all([
+      this.prisma.income.findMany({
+        where: { userId },
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.income.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: incomes.map((income) => ({
+        ...income,
+        amount: Number(income.amount),
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
   }
 
   async findById(id: number, userId: number) {
