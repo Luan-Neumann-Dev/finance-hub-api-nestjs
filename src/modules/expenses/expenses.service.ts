@@ -6,19 +6,70 @@ import {
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PaginatedResult, PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class ExpensesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId: number) {
-    const expenses = await this.prisma.expense.findMany({
-      where: { userId },
-      include: { category: true },
-      orderBy: { date: 'asc' },
-    });
+  async findAll(
+    userId: number,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResult<any>> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const skip = (page - 1) * limit;
 
-    return expenses.map((e) => ({ ...e, amount: Number(e.amount) }));
+    const now = new Date();
+    const month = pagination.month ?? now.getMonth() + 1;
+    const year = pagination.year ?? now.getFullYear();
+
+    const startDate = new Date(year, month - 1, 1, 0, 0, 0);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const where = {
+      userId,
+      date: { gte: startDate, lte: endDate },
+    };
+
+    const [expenses, total, allMonthExpenses] = await Promise.all([
+      this.prisma.expense.findMany({
+        where,
+        include: { category: true },
+        orderBy: { date: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.expense.count({ where }),
+      this.prisma.expense.findMany({
+        where,
+        select: { amount: true, paidAt: true },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    const totalPaid = allMonthExpenses
+      .filter((e) => e.paidAt !== null)
+      .reduce((s, e) => s + Number(e.amount), 0);
+
+    const totalPending = allMonthExpenses
+      .filter((e) => e.paidAt === null)
+      .reduce((s, e) => s + Number(e.amount), 0);
+
+    return {
+      data: expenses.map((e) => ({ ...e, amount: Number(e.amount) })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+        totalPaid,
+        totalPending,
+      },
+    };
   }
 
   async findById(id: number, userId: number) {
@@ -81,7 +132,10 @@ export class ExpensesService {
 
     const expense = await this.prisma.expense.update({
       where: { id },
-      data: dto,
+      data: {
+        ...dto,
+        ...(dto.date ? { date: new Date(dto.date) } : {}),
+      },
       include: { category: true },
     });
 
@@ -102,7 +156,7 @@ export class ExpensesService {
       include: { category: true },
     });
 
-    return { ...expense, amount: Number(expense.amount) }
+    return { ...expense, amount: Number(expense.amount) };
   }
 
   async unpay(id: number, userId: number) {
@@ -114,7 +168,7 @@ export class ExpensesService {
       include: { category: true },
     });
 
-    return { ...expense, amount: Number(expense.amount) }
+    return { ...expense, amount: Number(expense.amount) };
   }
 
   async findPending(userId: number) {
@@ -124,7 +178,7 @@ export class ExpensesService {
       orderBy: { date: 'asc' },
     });
 
-    return expenses.map((e) => ({ ...e, amount: Number(e.amount) }))
+    return expenses.map((e) => ({ ...e, amount: Number(e.amount) }));
   }
 
   async findDueSoon(userId: number, days = 7) {
@@ -137,7 +191,7 @@ export class ExpensesService {
     const expenses = await this.prisma.expense.findMany({
       where: {
         userId,
-        paidAt: null,               
+        paidAt: null,
         date: { gte: today, lte: limit },
       },
       include: { category: true },

@@ -16,14 +16,15 @@ import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { PeriodQueryDto, UpdateExpenseDto } from './dto/update-expense.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('expenses')
 export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) { }
+  constructor(private readonly expensesService: ExpensesService) {}
 
   @Get()
-  findAll(@CurrentUser() userId: number) {
-    return this.expensesService.findAll(userId);
+  findAll(@CurrentUser() userId: number, @Query() pagination: PaginationDto) {
+    return this.expensesService.findAll(userId, pagination);
   }
 
   @Get('period')
@@ -49,10 +50,7 @@ export class ExpensesController {
   }
 
   @Get('due-soon')
-  findDueSoon(
-    @CurrentUser() userId: number,
-    @Query('days') days?: string,
-  ) {
+  findDueSoon(@CurrentUser() userId: number, @Query('days') days?: string) {
     return this.expensesService.findDueSoon(userId, days ? parseInt(days) : 7);
   }
 
@@ -85,18 +83,12 @@ export class ExpensesController {
   }
 
   @Patch(':id/pay')
-  pay(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() userId: number,
-  ) {
+  pay(@Param('id', ParseIntPipe) id: number, @CurrentUser() userId: number) {
     return this.expensesService.pay(id, userId);
   }
 
   @Patch(':id/unpay')
-  unpay(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() userId: number,
-  ) {
+  unpay(@Param('id', ParseIntPipe) id: number, @CurrentUser() userId: number) {
     return this.expensesService.unpay(id, userId);
   }
 }
