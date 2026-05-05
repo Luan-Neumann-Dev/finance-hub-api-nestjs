@@ -9,7 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ExpensesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAll(userId: number) {
     const expenses = await this.prisma.expense.findMany({
@@ -91,5 +91,59 @@ export class ExpensesService {
   async delete(id: number, userId: number): Promise<void> {
     await this.findById(id, userId);
     await this.prisma.expense.delete({ where: { id } });
+  }
+
+  async pay(id: number, userId: number) {
+    await this.findById(id, userId);
+
+    const expense = await this.prisma.expense.update({
+      where: { id },
+      data: { paidAt: new Date() },
+      include: { category: true },
+    });
+
+    return { ...expense, amount: Number(expense.amount) }
+  }
+
+  async unpay(id: number, userId: number) {
+    await this.findById(id, userId);
+
+    const expense = await this.prisma.expense.update({
+      where: { id },
+      data: { paidAt: null },
+      include: { category: true },
+    });
+
+    return { ...expense, amount: Number(expense.amount) }
+  }
+
+  async findPending(userId: number) {
+    const expenses = await this.prisma.expense.findMany({
+      where: { userId, paidAt: null },
+      include: { category: true },
+      orderBy: { date: 'asc' },
+    });
+
+    return expenses.map((e) => ({ ...e, amount: Number(e.amount) }))
+  }
+
+  async findDueSoon(userId: number, days = 7) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const limit = new Date(today);
+    limit.setDate(limit.getDate() + days);
+
+    const expenses = await this.prisma.expense.findMany({
+      where: {
+        userId,
+        paidAt: null,               
+        date: { gte: today, lte: limit },
+      },
+      include: { category: true },
+      orderBy: { date: 'asc' },
+    });
+
+    return expenses.map((e) => ({ ...e, amount: Number(e.amount) }));
   }
 }

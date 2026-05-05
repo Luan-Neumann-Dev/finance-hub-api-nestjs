@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Put,
   HttpCode,
+  Patch,
   HttpStatus,
 } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
@@ -18,7 +19,7 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('expenses')
 export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) {}
+  constructor(private readonly expensesService: ExpensesService) { }
 
   @Get()
   findAll(@CurrentUser() userId: number) {
@@ -40,6 +41,19 @@ export class ExpensesController {
     @CurrentUser() userId: number,
   ) {
     return this.expensesService.findByCategory(categoryId, userId);
+  }
+
+  @Get('pending')
+  findPending(@CurrentUser() userId: number) {
+    return this.expensesService.findPending(userId);
+  }
+
+  @Get('due-soon')
+  findDueSoon(
+    @CurrentUser() userId: number,
+    @Query('days') days?: string,
+  ) {
+    return this.expensesService.findDueSoon(userId, days ? parseInt(days) : 7);
   }
 
   @Get(':id')
@@ -68,5 +82,21 @@ export class ExpensesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() userId: number) {
     return this.expensesService.delete(id, userId);
+  }
+
+  @Patch(':id/pay')
+  pay(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() userId: number,
+  ) {
+    return this.expensesService.pay(id, userId);
+  }
+
+  @Patch(':id/unpay')
+  unpay(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() userId: number,
+  ) {
+    return this.expensesService.unpay(id, userId);
   }
 }

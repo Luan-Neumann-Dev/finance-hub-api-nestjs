@@ -83,6 +83,7 @@ model Expense {
   amount             Decimal  @db.Decimal(12, 2)
   description        String
   date               DateTime @default(now()) @db.Date
+  paidAt DateTime? @map("paid_at")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -93,6 +94,8 @@ model Expense {
   @@index([userId])
   @@index([categoryId])
   @@index([date])
+  @@index([paidAt])   
+  @@index([installmentGroupId])
   @@map("expenses")
 }
 

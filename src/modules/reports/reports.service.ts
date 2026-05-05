@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async calcIncomesForMonth(
     userId: number,
@@ -62,7 +62,7 @@ export class ReportsService {
       59,
     );
 
-    const [totalIncomes, expensesAgg, savingsAggs, expensesByCategory] =
+    const [totalIncomes, expensesAgg, savingsAggs, expensesByCategory, pendingAgg] =
       await Promise.all([
         this.calcIncomesForMonth(userId, startOfMonth, endOfMonth),
         this.prisma.expense.aggregate({
@@ -83,6 +83,10 @@ export class ReportsService {
           _sum: { amount: true },
           _count: true,
         }),
+        this.prisma.expense.aggregate({
+          where: { userId, date: { gte: startOfMonth, lte: endOfMonth }, paidAt: null },
+          _sum: { amount: true },
+        })
       ]);
 
     const totalExpenses = Number(expensesAgg._sum.amount ?? 0);
@@ -113,9 +117,14 @@ export class ReportsService {
       })
       .sort((a, b) => b.total - a.total);
 
+    const totalPending = Number(pendingAgg._sum.amount ?? 0);
+    const totalPaid    = totalExpenses - totalPending;
+
     return {
       totalIncomes,
       totalExpenses,
+      totalPaid,
+      totalPending,
       balance: totalIncomes - totalExpenses,
       totalSavings,
       expensesByCategory: expensesByCategoryData,
