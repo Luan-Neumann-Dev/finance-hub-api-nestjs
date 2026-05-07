@@ -50,7 +50,7 @@ export class InstallmentsService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: groups.maps((g) => this.serializeGroup(g)),
+      data: groups.map((g) => this.serializeGroup(g)),
       meta: {
         total,
         page,
